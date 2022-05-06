@@ -1,11 +1,23 @@
-name: 'Your name here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: Commits Range Action
+description: Gets a range of commits and their related pull requests
+author: Arik Maor
 inputs:
-  milliseconds: # change this
+  deployed_revision:
     required: true
-    description: 'input description here'
-    default: 'default value if applicable'
+    description: Revision (commit) at the start of the range.
+  next_revision:
+    required: false
+    description: Revision (commit) at the end of the range (defaults to the commit in the workflow context).
+outputs:
+  new_commits:
+    description: Commits included in the next revision that aren't included in the deployed revision
+  removed_commits:
+    description: Commits include in the deployed revision that aren't included in the next revision
+  new_prs:
+    description: Pull requests related to new commits
+  removed_prs:
+    description: Pull requests related to removed commits
+
 runs:
-  using: 'node16'
-  main: 'dist/index.js'
+  using: node16
+  main: dist/index.js
