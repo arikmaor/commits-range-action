@@ -2,17 +2,17 @@ name: Commits Range Action
 description: Gets a range of commits and their related pull requests
 author: Arik Maor
 inputs:
-  deployed_revision:
+  base_revision:
     required: true
-    description: Revision (commit) at the start of the range.
-  next_revision:
+    description: Base revision (commit) of the range.
+  head_revision:
     required: false
-    description: Revision (commit) at the end of the range (defaults to the commit in the workflow context).
+    description: Head revision (commit) of the range (defaults to the head commit of the workflow context).
 outputs:
   new_commits:
-    description: Commits included in the next revision that aren't included in the deployed revision
+    description: Commits included in the head revision that aren't included in the base revision
   removed_commits:
-    description: Commits include in the deployed revision that aren't included in the next revision
+    description: Commits include in the base revision that aren't included in the head revision
   new_prs:
     description: Pull requests related to new commits
   removed_prs:
