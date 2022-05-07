@@ -1,105 +1,68 @@
 <p align="center">
-  <a href="https://github.com/actions/typescript-action/actions"><img alt="typescript-action status" src="https://github.com/actions/typescript-action/workflows/build-test/badge.svg"></a>
+  <a href="https://github.com/arikmaor/commits-range-action/actions"><img alt="typescript-action status" src="https://github.com/arikmaor/commits-range-action/workflows/build-test/badge.svg"></a>
 </p>
 
-# Create a JavaScript Action using TypeScript
+# Commits range action
 
-Use this template to bootstrap the creation of a TypeScript action.:rocket:
+Gets a list of commits that were added or removed (by running git log internally) along with their related pull requests.
 
-This template includes compilation support, tests, a validation workflow, publishing, and versioning guidance.  
+Useful for reporting during deployments which PRs are being deployed and which are rolled-back
 
-If you are new, there's also a simpler introduction.  See the [Hello World JavaScript Action](https://github.com/actions/hello-world-javascript-action)
+### Basic Usage:
 
-## Create an action from this template
-
-Click the `Use this Template` and provide the new repo details for your action
-
-## Code in Main
-
-> First, you'll need to have a reasonably modern version of `node` handy. This won't work with versions older than 9, for instance.
-
-Install the dependencies  
-```bash
-$ npm install
-```
-
-Build the typescript and package it for distribution
-```bash
-$ npm run build && npm run package
-```
-
-Run the tests :heavy_check_mark:  
-```bash
-$ npm test
-
- PASS  ./index.test.js
-  ✓ throws invalid number (3ms)
-  ✓ wait 500 ms (504ms)
-  ✓ test runs (95ms)
-
-...
-```
-
-## Change action.yml
-
-The action.yml defines the inputs and output for your action.
-
-Update the action.yml with your name, description, inputs and outputs for your action.
-
-See the [documentation](https://help.github.com/en/articles/metadata-syntax-for-github-actions)
-
-## Change the Code
-
-Most toolkit and CI/CD operations involve async operations so the action is run in an async function.
-
-```javascript
-import * as core from '@actions/core';
-...
-
-async function run() {
-  try { 
-      ...
-  } 
-  catch (error) {
-    core.setFailed(error.message);
-  }
-}
-
-run()
-```
-
-See the [toolkit documentation](https://github.com/actions/toolkit/blob/master/README.md#packages) for the various packages.
-
-## Publish to a distribution branch
-
-Actions are run from GitHub repos so we will checkin the packed dist folder. 
-
-Then run [ncc](https://github.com/zeit/ncc) and push the results:
-```bash
-$ npm run package
-$ git add dist
-$ git commit -a -m "prod dependencies"
-$ git push origin releases/v1
-```
-
-Note: We recommend using the `--license` option for ncc, which will create a license file for all of the production node modules used in your project.
-
-Your action is now published! :rocket: 
-
-See the [versioning documentation](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md)
-
-## Validate
-
-You can now validate the action by referencing `./` in a workflow in your repo (see [test.yml](.github/workflows/test.yml))
+Add this action as a step to your project's GitHub Action Workflow file:
 
 ```yaml
-uses: ./
-with:
-  milliseconds: 1000
+steps:
+  - uses: actions/checkout@v2
+    with:
+      fetch-depth: 0 # we must specify this to checkout all the branches
+  - name: Get deployed revision
+    id: get_rev
+    run: |
+      # get the deployed revision somehow, depends on your deployment
+      # export it to a step output
+      echo "::set-output name=deployed_rev::$DEPLOYED_REV"
+  - uses: arikmaor/commits-range-action@v1
+    id: commit_data
+    with:
+      github_token: ${{ secrets.GITHUB_TOKEN }}
+      base_revision: ${{ steps.get_rev.outputs.deployed_rev }}
+  - name: Print result
+    env:
+      RESULT: ${{ steps.commit_data.outputs.result }}
+    run: echo $RESULT | jq
 ```
 
-See the [actions tab](https://github.com/actions/typescript-action/actions) for runs of this action! :rocket:
+The result is a json that implements the following interface:
 
-## Usage:
+```typescript
+interface Result {
+  headOnlyCommits: CommitDetails[]
+  headOnlyPullRequests: PullRequestDetails[]
+  baseOnlyCommits: CommitDetails[]
+  baseOnlyPullRequests: PullRequestDetails[]
+}
 
-After testing you can [create a v1 tag](https://github.com/actions/toolkit/blob/master/docs/action-versioning.md) to reference the stable and latest V1 action
+interface CommitDetails {
+  oid: string
+  abbreviatedOid: string
+  messageHeadline: string
+  message: string
+  url: string
+  associatedPullRequests: PullRequestDetails[]
+}
+
+interface PullRequestDetails {
+  number: number
+  title: string
+  url: string
+  labels: string[]
+  body: string
+  closed: boolean
+  merged: boolean
+  isDraft: boolean
+  createdAt: string
+  author: string
+}
+```
