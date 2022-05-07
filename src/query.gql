@@ -1,0 +1,50 @@
+query getPullRequests($repo: String!, $owner: String!, $headCommit: String = "", $numberOfNewCommits: Int = 0, $baseCommit: String = "", $numberOfRemovedCommits: Int = 0) {
+  repository(name: $repo, owner: $owner) {
+    headOnlyCommits: object(expression: $headCommit) {
+      ... on Commit {
+        history(first: $numberOfNewCommits) {
+          ...commitHistoryFields
+        }
+      }
+    }
+    baseOnlyCommits: object(expression: $baseCommit) {
+      ... on Commit {
+        history(first: $numberOfRemovedCommits) {
+          ...commitHistoryFields
+        }
+      }
+    }
+  }
+}
+
+fragment commitHistoryFields on CommitHistoryConnection {
+  edges {
+    node {
+      oid
+      abbreviatedOid
+      messageHeadline
+      message
+      url
+      associatedPullRequests(first: 50) {
+        nodes {
+          number
+          title
+          url
+          labels(first: 50) {
+            nodes {
+              name
+            }
+          }
+          body
+          closed
+          merged
+          isDraft
+          createdAt
+          author {
+            login
+          }
+        }
+      }
+    }
+  }
+}

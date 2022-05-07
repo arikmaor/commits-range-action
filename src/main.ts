@@ -1,6 +1,12 @@
 import * as core from '@actions/core'
 import * as exec from '@actions/exec'
+import * as fs from 'fs'
 import * as github from '@actions/github'
+import * as path from 'path'
+
+const QUERY = fs.readFileSync(path.resolve(__dirname, '../src/query.gql'), {
+  encoding: 'utf-8'
+})
 
 async function run(): Promise<void> {
   try {
@@ -179,59 +185,6 @@ interface CommitHistoryFragment {
     }[]
   }
 }
-
-const QUERY = `
-query getPullRequests($repo: String!, $owner: String!, $headCommit: String = "", $numberOfNewCommits: Int = 0, $baseCommit: String = "", $numberOfRemovedCommits: Int = 0) {
-  repository(name: $repo, owner: $owner) {
-    headOnlyCommits: object(expression: $headCommit) {
-      ... on Commit {
-        history(first: $numberOfNewCommits) {
-          ...commitHistoryFields
-        }
-      }
-    }
-    baseOnlyCommits: object(expression: $baseCommit) {
-      ... on Commit {
-        history(first: $numberOfRemovedCommits) {
-          ...commitHistoryFields
-        }
-      }
-    }
-  }
-}
-
-fragment commitHistoryFields on CommitHistoryConnection {
-  edges {
-    node {
-      oid
-      abbreviatedOid
-      messageHeadline
-      message
-      url
-      associatedPullRequests(first: 50) {
-        nodes {
-          number
-          title
-          url
-          labels(first: 50) {
-            nodes {
-              name
-            }
-          }
-          body
-          closed
-          merged
-          isDraft
-          createdAt
-          author {
-            login
-          }
-        }
-      }
-    }
-  }
-}
-`
 
 function uniqeBy<T>(arr: T[], keySelector: (item: T) => unknown): T[] {
   const keySet = new Set()

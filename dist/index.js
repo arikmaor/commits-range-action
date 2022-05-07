@@ -37,7 +37,12 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
+const fs = __importStar(__nccwpck_require__(5747));
 const github = __importStar(__nccwpck_require__(5438));
+const path = __importStar(__nccwpck_require__(5622));
+const QUERY = fs.readFileSync(path.resolve(__dirname, '../src/query.gql'), {
+    encoding: 'utf-8'
+});
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -116,58 +121,6 @@ function parseCommitHistoryFragment(fragment) {
     const pullRequests = uniqeBy(commits.flatMap(commit => commit.associatedPullRequests), pr => pr.number);
     return { commits, pullRequests };
 }
-const QUERY = `
-query getPullRequests($repo: String!, $owner: String!, $headCommit: String = "", $numberOfNewCommits: Int = 0, $baseCommit: String = "", $numberOfRemovedCommits: Int = 0) {
-  repository(name: $repo, owner: $owner) {
-    headOnlyCommits: object(expression: $headCommit) {
-      ... on Commit {
-        history(first: $numberOfNewCommits) {
-          ...commitHistoryFields
-        }
-      }
-    }
-    baseOnlyCommits: object(expression: $baseCommit) {
-      ... on Commit {
-        history(first: $numberOfRemovedCommits) {
-          ...commitHistoryFields
-        }
-      }
-    }
-  }
-}
-
-fragment commitHistoryFields on CommitHistoryConnection {
-  edges {
-    node {
-      oid
-      abbreviatedOid
-      messageHeadline
-      message
-      url
-      associatedPullRequests(first: 50) {
-        nodes {
-          number
-          title
-          url
-          labels(first: 50) {
-            nodes {
-              name
-            }
-          }
-          body
-          closed
-          merged
-          isDraft
-          createdAt
-          author {
-            login
-          }
-        }
-      }
-    }
-  }
-}
-`;
 function uniqeBy(arr, keySelector) {
     const keySet = new Set();
     return arr.filter(item => {
