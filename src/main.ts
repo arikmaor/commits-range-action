@@ -1,19 +1,12 @@
 import * as core from '@actions/core'
 import * as github from '@actions/github'
-import {getNumberOfCommits} from './git-operations'
+import {getNumberOfCommits, revParse} from './git-operations'
 import {parseQueryResult} from './parse-query'
 import {queryCommitsAndPrs} from './github-query'
 
 async function run(): Promise<void> {
   try {
-    const baseRevision = core.getInput('base_revision')
-    if (!baseRevision) {
-      throw new Error('base_revision is required!')
-    }
-    core.debug(`Base revision: ${baseRevision}`)
-
-    const headRevision = core.getInput('head_revision') || github.context.sha
-    core.debug(`Head revision: ${headRevision}`)
+    const {baseRevision, headRevision} = await getInputRevisions()
 
     const headOnlyCommitsCount = await getNumberOfCommits(
       baseRevision,
@@ -45,3 +38,32 @@ async function run(): Promise<void> {
 }
 
 run()
+
+async function getInputRevisions(): Promise<{
+  baseRevision: string
+  headRevision: string
+}> {
+  const baseRevisionInput = core.getInput('base_revision')
+  if (!baseRevisionInput) {
+    throw new Error('base_revision is required!')
+  }
+  const baseRevision = await revParse(baseRevisionInput)
+  core.debug(
+    `Base revision: ${
+      baseRevisionInput === baseRevision
+        ? baseRevision
+        : `${baseRevisionInput} (${baseRevision})`
+    }`
+  )
+
+  const headRevisionInput = core.getInput('head_revision') || github.context.sha
+  const headRevision = await revParse(headRevisionInput)
+  core.debug(
+    `Head revision: ${
+      headRevisionInput === headRevision
+        ? headRevision
+        : `${headRevisionInput} (${headRevision})`
+    }`
+  )
+  return {baseRevision, headRevision}
+}

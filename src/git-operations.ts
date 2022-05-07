@@ -9,7 +9,6 @@ export async function getNumberOfCommits(
   try {
     await exec.exec('git', ['log', '--oneline', `${base}..${head}`], {
       silent: true,
-      cwd: '../react',
       listeners: {
         stdline() {
           count++
@@ -18,9 +17,32 @@ export async function getNumberOfCommits(
     })
   } catch (error) {
     core.warning(
-      `Revision not found${error instanceof Error ? `: ${error.message}` : ''}`
+      `Error in 'git log ${base}..${head}' ${
+        error instanceof Error ? `: ${error.message}` : ''
+      }`
     )
     return 0
   }
   return count
+}
+
+export async function revParse(rev: string): Promise<string> {
+  let parsedRef = rev
+  try {
+    await exec.exec('git', ['rev-parse', rev], {
+      silent: true,
+      listeners: {
+        stdline(line) {
+          parsedRef = line
+        }
+      }
+    })
+  } catch (error) {
+    core.warning(
+      `Revision '${rev}' not found${
+        error instanceof Error ? `: ${error.message}` : ''
+      }`
+    )
+  }
+  return parsedRef
 }

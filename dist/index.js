@@ -35,7 +35,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.getNumberOfCommits = void 0;
+exports.revParse = exports.getNumberOfCommits = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const exec = __importStar(__nccwpck_require__(1514));
 function getNumberOfCommits(base, head) {
@@ -44,7 +44,6 @@ function getNumberOfCommits(base, head) {
         try {
             yield exec.exec('git', ['log', '--oneline', `${base}..${head}`], {
                 silent: true,
-                cwd: '../react',
                 listeners: {
                     stdline() {
                         count++;
@@ -53,13 +52,33 @@ function getNumberOfCommits(base, head) {
             });
         }
         catch (error) {
-            core.warning(`Revision not found${error instanceof Error ? `: ${error.message}` : ''}`);
+            core.warning(`Error in 'git log ${base}..${head}' ${error instanceof Error ? `: ${error.message}` : ''}`);
             return 0;
         }
         return count;
     });
 }
 exports.getNumberOfCommits = getNumberOfCommits;
+function revParse(rev) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let parsedRef = rev;
+        try {
+            yield exec.exec('git', ['rev-parse', rev], {
+                silent: true,
+                listeners: {
+                    stdline(line) {
+                        parsedRef = line;
+                    }
+                }
+            });
+        }
+        catch (error) {
+            core.warning(`Revision '${rev}' not found${error instanceof Error ? `: ${error.message}` : ''}`);
+        }
+        return parsedRef;
+    });
+}
+exports.revParse = revParse;
 
 
 /***/ }),
@@ -193,13 +212,7 @@ const github_query_1 = __nccwpck_require__(7758);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
-            const baseRevision = core.getInput('base_revision');
-            if (!baseRevision) {
-                throw new Error('base_revision is required!');
-            }
-            core.debug(`Base revision: ${baseRevision}`);
-            const headRevision = core.getInput('head_revision') || github.context.sha;
-            core.debug(`Head revision: ${headRevision}`);
+            const { baseRevision, headRevision } = yield getInputRevisions();
             const headOnlyCommitsCount = yield (0, git_operations_1.getNumberOfCommits)(baseRevision, headRevision);
             const baseOnlyCommitsCount = yield (0, git_operations_1.getNumberOfCommits)(headRevision, baseRevision);
             const queryResult = yield (0, github_query_1.queryCommitsAndPrs)(headRevision, baseRevision, headOnlyCommitsCount, baseOnlyCommitsCount);
@@ -216,6 +229,24 @@ function run() {
     });
 }
 run();
+function getInputRevisions() {
+    return __awaiter(this, void 0, void 0, function* () {
+        const baseRevisionInput = core.getInput('base_revision');
+        if (!baseRevisionInput) {
+            throw new Error('base_revision is required!');
+        }
+        const baseRevision = yield (0, git_operations_1.revParse)(baseRevisionInput);
+        core.debug(`Base revision: ${baseRevisionInput === baseRevision
+            ? baseRevision
+            : `${baseRevisionInput} (${baseRevision})`}`);
+        const headRevisionInput = core.getInput('head_revision') || github.context.sha;
+        const headRevision = yield (0, git_operations_1.revParse)(headRevisionInput);
+        core.debug(`Head revision: ${headRevisionInput === headRevision
+            ? headRevision
+            : `${headRevisionInput} (${headRevision})`}`);
+        return { baseRevision, headRevision };
+    });
+}
 
 
 /***/ }),
