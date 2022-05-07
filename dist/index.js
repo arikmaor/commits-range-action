@@ -62,8 +62,10 @@ function run() {
             });
         }
         catch (error) {
-            if (error instanceof Error)
+            if (error instanceof Error) {
+                core.error(error.message);
                 core.setFailed(error.message);
+            }
         }
     });
 }
@@ -74,10 +76,10 @@ function getNumberOrCommits(base, head) {
         try {
             yield exec.exec('git', ['log', '--oneline', `${base}..${head}`], {
                 silent: true,
+                cwd: '../react',
                 listeners: {
-                    stdline(line) {
+                    stdline() {
                         count++;
-                        core.info(line);
                     }
                 }
             });
@@ -92,14 +94,16 @@ function getNumberOrCommits(base, head) {
 function queryCommitsAndPrs(headCommit, baseCommit, numberOfNewCommits, numberOfRemovedCommits) {
     return __awaiter(this, void 0, void 0, function* () {
         const octokit = github.getOctokit(core.getInput('github_token'));
-        const result = yield octokit.graphql(QUERY, {
+        const queryParams = {
             owner: github.context.repo.owner,
             repo: github.context.repo.repo,
             headCommit,
             baseCommit,
-            numberOfNewCommits,
-            numberOfRemovedCommits
-        });
+            numberOfNewCommits: Math.min(100, numberOfNewCommits),
+            numberOfRemovedCommits: Math.min(100, numberOfRemovedCommits)
+        };
+        core.debug(`queryParams: ${JSON.stringify(queryParams)}`);
+        const result = yield octokit.graphql(QUERY, queryParams);
         core.debug(JSON.stringify(result));
         return result;
     });
@@ -140,12 +144,12 @@ fragment commitHistoryFields on CommitHistoryConnection {
       messageHeadline
       message
       url
-      associatedPullRequests(first: 100) {
+      associatedPullRequests(first: 50) {
         nodes {
           number
           title
           url
-          labels(first: 100) {
+          labels(first: 50) {
             nodes {
               name
             }

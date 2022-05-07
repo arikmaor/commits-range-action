@@ -43,7 +43,10 @@ async function run(): Promise<void> {
       baseOnlyPullRequests
     })
   } catch (error) {
-    if (error instanceof Error) core.setFailed(error.message)
+    if (error instanceof Error) {
+      core.error(error.message)
+      core.setFailed(error.message)
+    }
   }
 }
 
@@ -54,10 +57,10 @@ async function getNumberOrCommits(base: string, head: string): Promise<number> {
   try {
     await exec.exec('git', ['log', '--oneline', `${base}..${head}`], {
       silent: true,
+      cwd: '../react',
       listeners: {
-        stdline(line) {
+        stdline() {
           count++
-          core.info(line)
         }
       }
     })
@@ -77,14 +80,16 @@ async function queryCommitsAndPrs(
   numberOfRemovedCommits: number
 ): Promise<QueryResult> {
   const octokit = github.getOctokit(core.getInput('github_token'))
-  const result = await octokit.graphql<QueryResult>(QUERY, {
+  const queryParams = {
     owner: github.context.repo.owner,
     repo: github.context.repo.repo,
     headCommit,
     baseCommit,
-    numberOfNewCommits,
-    numberOfRemovedCommits
-  })
+    numberOfNewCommits: Math.min(100, numberOfNewCommits),
+    numberOfRemovedCommits: Math.min(100, numberOfRemovedCommits)
+  }
+  core.debug(`queryParams: ${JSON.stringify(queryParams)}`)
+  const result = await octokit.graphql<QueryResult>(QUERY, queryParams)
   core.debug(JSON.stringify(result))
   return result
 }
@@ -203,12 +208,12 @@ fragment commitHistoryFields on CommitHistoryConnection {
       messageHeadline
       message
       url
-      associatedPullRequests(first: 100) {
+      associatedPullRequests(first: 50) {
         nodes {
           number
           title
           url
-          labels(first: 100) {
+          labels(first: 50) {
             nodes {
               name
             }
