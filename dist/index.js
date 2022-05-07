@@ -1,6 +1,156 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 8601:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.getNumberOfCommits = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const exec = __importStar(__nccwpck_require__(1514));
+function getNumberOfCommits(base, head) {
+    return __awaiter(this, void 0, void 0, function* () {
+        let count = 0;
+        try {
+            yield exec.exec('git', ['log', '--oneline', `${base}..${head}`], {
+                silent: true,
+                cwd: '../react',
+                listeners: {
+                    stdline() {
+                        count++;
+                    }
+                }
+            });
+        }
+        catch (error) {
+            core.warning(`Revision not found${error instanceof Error ? `: ${error.message}` : ''}`);
+            return 0;
+        }
+        return count;
+    });
+}
+exports.getNumberOfCommits = getNumberOfCommits;
+
+
+/***/ }),
+
+/***/ 7758:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.queryCommitsAndPrs = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+const fs = __importStar(__nccwpck_require__(5747));
+const github = __importStar(__nccwpck_require__(5438));
+const path = __importStar(__nccwpck_require__(5622));
+const QUERY = fs.readFileSync(path.resolve(__dirname, '../src/query.gql'), {
+    encoding: 'utf-8'
+});
+function queryCommitsAndPrs(headCommit, baseCommit, numberOfNewCommits, numberOfRemovedCommits) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const octokit = github.getOctokit(core.getInput('github_token'));
+        const queryParams = {
+            owner: github.context.repo.owner,
+            repo: github.context.repo.repo,
+            headCommit,
+            baseCommit,
+            numberOfNewCommits: Math.min(100, numberOfNewCommits),
+            numberOfRemovedCommits: Math.min(100, numberOfRemovedCommits)
+        };
+        core.debug(`queryParams: ${JSON.stringify(queryParams)}`);
+        const result = yield octokit.graphql(QUERY, queryParams);
+        core.debug(JSON.stringify(result));
+        return result;
+    });
+}
+exports.queryCommitsAndPrs = queryCommitsAndPrs;
+
+
+/***/ }),
+
+/***/ 5008:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.uniqeBy = void 0;
+function uniqeBy(arr, keySelector) {
+    const keySet = new Set();
+    return arr.filter(item => {
+        const key = keySelector(item);
+        if (keySet.has(key)) {
+            return false;
+        }
+        keySet.add(key);
+        return true;
+    });
+}
+exports.uniqeBy = uniqeBy;
+
+
+/***/ }),
+
 /***/ 3109:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -36,13 +186,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const core = __importStar(__nccwpck_require__(2186));
-const exec = __importStar(__nccwpck_require__(1514));
-const fs = __importStar(__nccwpck_require__(5747));
 const github = __importStar(__nccwpck_require__(5438));
-const path = __importStar(__nccwpck_require__(5622));
-const QUERY = fs.readFileSync(path.resolve(__dirname, '../src/query.gql'), {
-    encoding: 'utf-8'
-});
+const git_operations_1 = __nccwpck_require__(8601);
+const parse_query_1 = __nccwpck_require__(49);
+const github_query_1 = __nccwpck_require__(7758);
 function run() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -53,18 +200,12 @@ function run() {
             core.debug(`Base revision: ${baseRevision}`);
             const headRevision = core.getInput('head_revision') || github.context.sha;
             core.debug(`Head revision: ${headRevision}`);
-            const headOnlyCommitsCount = yield getNumberOrCommits(baseRevision, headRevision);
-            const baseOnlyCommitsCount = yield getNumberOrCommits(headRevision, baseRevision);
-            const { repository } = yield queryCommitsAndPrs(headRevision, baseRevision, headOnlyCommitsCount, baseOnlyCommitsCount);
-            const { commits: headOnlyCommits, pullRequests: headOnlyPullRequests } = parseCommitHistoryFragment(repository.headOnlyCommits);
-            const { commits: baseOnlyCommits, pullRequests: baseOnlyPullRequests } = parseCommitHistoryFragment(repository.baseOnlyCommits);
+            const headOnlyCommitsCount = yield (0, git_operations_1.getNumberOfCommits)(baseRevision, headRevision);
+            const baseOnlyCommitsCount = yield (0, git_operations_1.getNumberOfCommits)(headRevision, baseRevision);
+            const queryResult = yield (0, github_query_1.queryCommitsAndPrs)(headRevision, baseRevision, headOnlyCommitsCount, baseOnlyCommitsCount);
+            const result = (0, parse_query_1.parseQueryResult)(queryResult);
             core.setCommandEcho(true);
-            core.setOutput('result', {
-                headOnlyCommits,
-                headOnlyPullRequests,
-                baseOnlyCommits,
-                baseOnlyPullRequests
-            });
+            core.setOutput('result', result);
         }
         catch (error) {
             if (error instanceof Error) {
@@ -75,62 +216,36 @@ function run() {
     });
 }
 run();
-function getNumberOrCommits(base, head) {
-    return __awaiter(this, void 0, void 0, function* () {
-        let count = 0;
-        try {
-            yield exec.exec('git', ['log', '--oneline', `${base}..${head}`], {
-                silent: true,
-                cwd: '../react',
-                listeners: {
-                    stdline() {
-                        count++;
-                    }
-                }
-            });
-        }
-        catch (error) {
-            core.warning(`Revision not found${error instanceof Error ? `: ${error.message}` : ''}`);
-            return 0;
-        }
-        return count;
-    });
+
+
+/***/ }),
+
+/***/ 49:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.parseQueryResult = void 0;
+const helpers_1 = __nccwpck_require__(5008);
+function parseQueryResult({ repository }) {
+    const { commits: headOnlyCommits, pullRequests: headOnlyPullRequests } = parseCommitHistoryFragment(repository.headOnlyCommits);
+    const { commits: baseOnlyCommits, pullRequests: baseOnlyPullRequests } = parseCommitHistoryFragment(repository.baseOnlyCommits);
+    return {
+        headOnlyCommits,
+        headOnlyPullRequests,
+        baseOnlyCommits,
+        baseOnlyPullRequests
+    };
 }
-function queryCommitsAndPrs(headCommit, baseCommit, numberOfNewCommits, numberOfRemovedCommits) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const octokit = github.getOctokit(core.getInput('github_token'));
-        const queryParams = {
-            owner: github.context.repo.owner,
-            repo: github.context.repo.repo,
-            headCommit,
-            baseCommit,
-            numberOfNewCommits: Math.min(100, numberOfNewCommits),
-            numberOfRemovedCommits: Math.min(100, numberOfRemovedCommits)
-        };
-        core.debug(`queryParams: ${JSON.stringify(queryParams)}`);
-        const result = yield octokit.graphql(QUERY, queryParams);
-        core.debug(JSON.stringify(result));
-        return result;
-    });
-}
+exports.parseQueryResult = parseQueryResult;
 function parseCommitHistoryFragment(fragment) {
     if (!fragment) {
         return { commits: [], pullRequests: [] };
     }
     const commits = fragment.history.edges.map(({ node }) => (Object.assign(Object.assign({}, node), { associatedPullRequests: node.associatedPullRequests.nodes.map(pr => (Object.assign(Object.assign({}, pr), { labels: pr.labels.nodes.map(label => label.name), author: pr.author.login }))) })));
-    const pullRequests = uniqeBy(commits.flatMap(commit => commit.associatedPullRequests), pr => pr.number);
+    const pullRequests = (0, helpers_1.uniqeBy)(commits.flatMap(commit => commit.associatedPullRequests), pr => pr.number);
     return { commits, pullRequests };
-}
-function uniqeBy(arr, keySelector) {
-    const keySet = new Set();
-    return arr.filter(item => {
-        const key = keySelector(item);
-        if (keySet.has(key)) {
-            return false;
-        }
-        keySet.add(key);
-        return true;
-    });
 }
 
 
