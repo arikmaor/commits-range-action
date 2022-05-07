@@ -22,6 +22,11 @@ jobs:
         with:
           fetch-depth: 0
       - uses: ./
+        id: commit_data
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           base_revision: 1c5ec87
+      - name: Print result
+        env:
+          RESULT: ${{ steps.commit_data.outputs.result }}
+        run: echo $RESULT | jq

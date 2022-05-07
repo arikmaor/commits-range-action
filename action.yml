@@ -12,14 +12,8 @@ inputs:
     required: false
     description: Head revision (commit) of the range (defaults to the head commit of the workflow context).
 outputs:
-  new_commits:
-    description: Commits included in the head revision that aren't included in the base revision
-  removed_commits:
-    description: Commits include in the base revision that aren't included in the head revision
-  new_prs:
-    description: Pull requests related to new commits
-  removed_prs:
-    description: Pull requests related to removed commits
+  result:
+    description: JSON object describing the commits in pull requests in base and head branches
 
 runs:
   using: node16
