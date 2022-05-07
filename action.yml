@@ -2,6 +2,9 @@ name: Commits Range Action
 description: Gets a range of commits and their related pull requests
 author: Arik Maor
 inputs:
+  github_token:
+    required: true
+    description: Token for github requests.
   base_revision:
     required: true
     description: Base revision (commit) of the range.
