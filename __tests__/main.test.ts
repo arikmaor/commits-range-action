@@ -13,7 +13,8 @@ test('test runs', () => {
         process.env['GITHUB_REPOSITORY'] || 'arikmaor/commits-range-action',
       INPUT_BASE_REVISION: process.env['INPUT_BASE_REVISION'] || 'HEAD^^^',
       INPUT_HEAD_REVISION: process.env['INPUT_HEAD_REVISION'] || 'HEAD'
-    }
+    },
+    stdio: 'inherit'
   }
-  console.log(cp.execFileSync(np, [ip], options).toString())
+  cp.execFileSync(np, [ip], options)
 })
