@@ -43,19 +43,6 @@ async function getInputRevisions(): Promise<{
   baseRevision: string
   headRevision: string
 }> {
-  const baseRevisionInput = core.getInput('base_revision')
-  if (!baseRevisionInput) {
-    throw new Error('base_revision is required!')
-  }
-  const baseRevision = await revParse(baseRevisionInput)
-  core.debug(
-    `Base revision: ${
-      baseRevisionInput === baseRevision
-        ? baseRevision
-        : `${baseRevisionInput} (${baseRevision})`
-    }`
-  )
-
   const headRevisionInput = core.getInput('head_revision') || github.context.sha
   const headRevision = await revParse(headRevisionInput)
   core.debug(
@@ -65,5 +52,18 @@ async function getInputRevisions(): Promise<{
         : `${headRevisionInput} (${headRevision})`
     }`
   )
+
+  const baseRevisionInput = core.getInput('base_revision')
+  const baseRevision = baseRevisionInput
+    ? await revParse(baseRevisionInput)
+    : headRevisionInput
+  core.debug(
+    `Base revision: ${
+      baseRevisionInput === baseRevision
+        ? baseRevision
+        : `${baseRevisionInput} (${baseRevision})`
+    }`
+  )
+
   return {baseRevision, headRevision}
 }

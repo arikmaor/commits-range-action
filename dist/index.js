@@ -231,19 +231,18 @@ function run() {
 run();
 function getInputRevisions() {
     return __awaiter(this, void 0, void 0, function* () {
-        const baseRevisionInput = core.getInput('base_revision');
-        if (!baseRevisionInput) {
-            throw new Error('base_revision is required!');
-        }
-        const baseRevision = yield (0, git_operations_1.revParse)(baseRevisionInput);
-        core.debug(`Base revision: ${baseRevisionInput === baseRevision
-            ? baseRevision
-            : `${baseRevisionInput} (${baseRevision})`}`);
         const headRevisionInput = core.getInput('head_revision') || github.context.sha;
         const headRevision = yield (0, git_operations_1.revParse)(headRevisionInput);
         core.debug(`Head revision: ${headRevisionInput === headRevision
             ? headRevision
             : `${headRevisionInput} (${headRevision})`}`);
+        const baseRevisionInput = core.getInput('base_revision');
+        const baseRevision = baseRevisionInput
+            ? yield (0, git_operations_1.revParse)(baseRevisionInput)
+            : headRevisionInput;
+        core.debug(`Base revision: ${baseRevisionInput === baseRevision
+            ? baseRevision
+            : `${baseRevisionInput} (${baseRevision})`}`);
         return { baseRevision, headRevision };
     });
 }

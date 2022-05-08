@@ -6,8 +6,8 @@ inputs:
     required: true
     description: Token for github requests.
   base_revision:
-    required: true
-    description: Base revision (commit) of the range.
+    required: false
+    description: Base revision (commit) of the range (if empty or not found, empty lists will be returned).
   head_revision:
     required: false
     description: Head revision (commit) of the range (defaults to the head commit of the workflow context).
