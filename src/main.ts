@@ -25,7 +25,8 @@ async function run(): Promise<void> {
       baseOnlyCommitsCount
     )
 
-    const result = parseQueryResult(queryResult)
+    const includeBody = getBooleanInput('includeBody')
+    const result = parseQueryResult(queryResult, includeBody)
 
     core.setCommandEcho(true)
     core.setOutput('result', result)
@@ -38,6 +39,15 @@ async function run(): Promise<void> {
 }
 
 run()
+
+function getBooleanInput(inputName: string, defaultValue = false): boolean {
+  const inputVal = core.getInput(inputName)
+  if (!inputVal) {
+    return defaultValue
+  }
+
+  return inputVal.toLowerCase() === 'true'
+}
 
 async function getInputRevisions(): Promise<{
   baseRevision: string

@@ -11,6 +11,9 @@ inputs:
   head_revision:
     required: false
     description: Head revision (commit) of the range (defaults to the head commit of the workflow context).
+  include_body:
+    required: false
+    description: Fetch the entire body/description of pull requests
 outputs:
   result:
     description: JSON object describing the commits in pull requests in base and head branches

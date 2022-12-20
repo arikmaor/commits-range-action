@@ -228,7 +228,8 @@ function run() {
             const headOnlyCommitsCount = yield (0, git_operations_1.getNumberOfCommits)(baseRevision, headRevision);
             const baseOnlyCommitsCount = yield (0, git_operations_1.getNumberOfCommits)(headRevision, baseRevision);
             const queryResult = yield (0, github_query_1.queryCommitsAndPrs)(headRevision, baseRevision, headOnlyCommitsCount, baseOnlyCommitsCount);
-            const result = (0, parse_query_1.parseQueryResult)(queryResult);
+            const includeBody = getBooleanInput('includeBody');
+            const result = (0, parse_query_1.parseQueryResult)(queryResult, includeBody);
             core.setCommandEcho(true);
             core.setOutput('result', result);
         }
@@ -241,6 +242,13 @@ function run() {
     });
 }
 run();
+function getBooleanInput(inputName, defaultValue = false) {
+    const inputVal = core.getInput(inputName);
+    if (!inputVal) {
+        return defaultValue;
+    }
+    return inputVal.toLowerCase() === 'true';
+}
 function getInputRevisions() {
     return __awaiter(this, void 0, void 0, function* () {
         const headRevisionInput = core.getInput('head_revision') || github.context.sha;
@@ -270,9 +278,9 @@ function getInputRevisions() {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseQueryResult = void 0;
 const helpers_1 = __nccwpck_require__(5008);
-function parseQueryResult({ repository }) {
-    const { commits: headOnlyCommits, pullRequests: headOnlyPullRequests } = parseCommitHistoryFragment(repository.headOnlyCommits);
-    const { commits: baseOnlyCommits, pullRequests: baseOnlyPullRequests } = parseCommitHistoryFragment(repository.baseOnlyCommits);
+function parseQueryResult({ repository }, includeBody = false) {
+    const { commits: headOnlyCommits, pullRequests: headOnlyPullRequests } = parseCommitHistoryFragment(repository.headOnlyCommits, includeBody);
+    const { commits: baseOnlyCommits, pullRequests: baseOnlyPullRequests } = parseCommitHistoryFragment(repository.baseOnlyCommits, includeBody);
     return {
         headOnlyCommits,
         headOnlyPullRequests,
@@ -281,11 +289,18 @@ function parseQueryResult({ repository }) {
     };
 }
 exports.parseQueryResult = parseQueryResult;
-function parseCommitHistoryFragment(fragment) {
+function parseCommitHistoryFragment(fragment, includeBody) {
     if (!fragment) {
         return { commits: [], pullRequests: [] };
     }
     const commits = fragment.history.edges.map(({ node }) => (Object.assign(Object.assign({}, node), { associatedPullRequests: node.associatedPullRequests.nodes.map(pr => (Object.assign(Object.assign({}, pr), { labels: pr.labels.nodes.map(label => label.name), author: pr.author.login }))) })));
+    if (!includeBody) {
+        for (const commit of commits) {
+            for (const pr of commit.associatedPullRequests) {
+                delete pr.body;
+            }
+        }
+    }
     const pullRequests = (0, helpers_1.uniqeBy)(commits.flatMap(commit => commit.associatedPullRequests), pr => pr.number);
     return { commits, pullRequests };
 }
